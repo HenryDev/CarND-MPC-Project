@@ -21,6 +21,19 @@ double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
+double ref_cte = 0;
+double ref_epsi = 0;
+double ref_v = 100;
+
+size_t x_start = 0;
+size_t y_start = x_start + N;
+size_t psi_start = y_start + N;
+size_t v_start = psi_start + N;
+size_t cte_start = v_start + N;
+size_t epsi_start = cte_start + N;
+size_t delta_start = epsi_start + N;
+size_t a_start = delta_start + N - 1;
+
 class FG_eval {
 public:
     // Fitted polynomial coefficients
@@ -31,10 +44,24 @@ public:
     typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
 
     void operator()(ADvector &fg, const ADvector &vars) {
-        // TODO: implement MPC
+        // implement MPC
         // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
         // NOTE: You'll probably go back and forth between this function and
         // the Solver function below.
+        fg[0] = 0;
+        for (int i = 0; i < N; i++) {
+            fg[0] += 2000 * CppAD::pow(vars[cte_start + i] - ref_cte, 2);
+            fg[0] += 2000 * CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
+            fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
+        }
+        for (int j = 0; j < N - 1; j++) {
+            fg[0] += 5 * CppAD::pow(vars[delta_start + j], 2);
+            fg[0] += 5 * CppAD::pow(vars[a_start + j], 2);
+        }
+        for (int k = 0; k < N - 2; k++) {
+            fg[0] += 200 * CppAD::pow(vars[delta_start + k + 1] - vars[delta_start + k], 2);
+            fg[0] += 10 * CppAD::pow(vars[a_start + k + 1] - vars[a_start + k], 2);
+        }
     }
 };
 
