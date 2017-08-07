@@ -174,16 +174,11 @@ int main() {
         }
     });
 
-    // We don't need this since we're not using HTTP but if it's removed the
-    // program
-    // doesn't compile :-(
-    h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data,
-                       size_t, size_t) {
+    h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data, size_t, size_t) {
         const std::string s = "<h1>Hello world!</h1>";
         if (req.getUrl().valueLength == 1) {
             res->end(s.data(), s.length());
         } else {
-            // i guess this should be done more gracefully?
             res->end(nullptr, 0);
         }
     });
@@ -192,8 +187,7 @@ int main() {
         std::cout << "Connected!!!" << std::endl;
     });
 
-    h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER != 0u> ws, int code,
-                           char *message, size_t length) {
+    h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER != 0u> ws, int code, char *message, size_t length) {
         ws.close();
         std::cout << "Disconnected" << std::endl;
     });
