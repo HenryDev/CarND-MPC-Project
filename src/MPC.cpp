@@ -1,7 +1,6 @@
 #include "MPC.h"
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
-#include "Eigen-3.3/Eigen/Core"
 
 using CppAD::AD;
 
@@ -21,8 +20,6 @@ double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-double ref_cte = 0;
-double ref_epsi = 0;
 double ref_v = 100;
 
 size_t x_start = 0;
@@ -39,7 +36,7 @@ public:
     // Fitted polynomial coefficients
     Eigen::VectorXd coeffs;
 
-    FG_eval(Eigen::VectorXd coeffs) { this->coeffs = coeffs; }
+    explicit FG_eval(Eigen::VectorXd coeffs) { this->coeffs = std::move(coeffs); }
 
     typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
 
@@ -124,13 +121,11 @@ public:
 //
 // MPC class definition implementation.
 //
-MPC::MPC() {}
+MPC::MPC() = default;
 
-MPC::~MPC() {}
+MPC::~MPC() = default;
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
-    bool ok = true;
-    size_t i;
     typedef CPPAD_TESTVECTOR(double) Dvector;
     double x = state[0];
     double y = state[1];
@@ -163,12 +158,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     }
     // The upper and lower limits of delta are set to -25 and 25
     // degrees (values in radians).
-    for (int i = delta_start; i < a_start; i++) {
+    for (size_t i = delta_start; i < a_start; i++) {
         vars_lowerbound[i] = -0.436332 * Lf;
         vars_upperbound[i] = 0.436332 * Lf;
     }
     // Acceleration/decceleration upper and lower limits.
-    for (int i = a_start; i < n_vars; i++) {
+    for (size_t i = a_start; i < n_vars; i++) {
         vars_lowerbound[i] = -1;
         vars_upperbound[i] = 1;
     }
@@ -194,7 +189,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     constraints_upperbound[cte_start] = cte;
     constraints_upperbound[epsi_start] = epsi;
     // object that computes objective and constraints
-    FG_eval fg_eval(coeffs);
+    FG_eval fg_eval(std::move(coeffs));
 
     //
     // NOTE: You don't have to worry about these options
@@ -218,12 +213,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     CppAD::ipopt::solve_result<Dvector> solution;
 
     // solve the problem
-    CppAD::ipopt::solve<Dvector, FG_eval>(
-            options, vars, vars_lowerbound, vars_upperbound, constraints_lowerbound,
-            constraints_upperbound, fg_eval, solution);
-
-    // Check some of the solution values
-    ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
+    CppAD::ipopt::solve<Dvector, FG_eval>(options, vars, vars_lowerbound, vars_upperbound, constraints_lowerbound,
+                                          constraints_upperbound, fg_eval, solution);
 
     // Cost
     auto cost = solution.obj_value;
