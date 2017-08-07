@@ -1,9 +1,6 @@
-#include <math.h>
+#include <cmath>
 #include <uWS/uWS.h>
-#include <chrono>
-#include <iostream>
 #include <thread>
-#include <vector>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "MPC.h"
@@ -17,18 +14,17 @@ constexpr double pi() { return M_PI; }
 
 double deg2rad(double x) { return x * pi() / 180; }
 
-double rad2deg(double x) { return x * 180 / pi(); }
-
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
-string hasData(string s) {
+string hasData(const string &s) {
     auto found_null = s.find("null");
-    auto b1 = s.find_first_of("[");
+    auto b1 = s.find_first_of('[');
     auto b2 = s.rfind("}]");
     if (found_null != string::npos) {
         return "";
-    } else if (b1 != string::npos && b2 != string::npos) {
+    }
+    if (b1 != string::npos && b2 != string::npos) {
         return s.substr(b1, b2 - b1 + 2);
     }
     return "";
@@ -46,7 +42,7 @@ double polyeval(Eigen::VectorXd coeffs, double x) {
 // Fit a polynomial.
 // Adapted from
 // https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
-Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
+Eigen::VectorXd polyfit(Eigen::VectorXd xvals, const Eigen::VectorXd &yvals,
                         int order) {
     assert(xvals.size() == yvals.size());
     assert(order >= 1 && order <= xvals.size() - 1);
@@ -73,7 +69,7 @@ int main() {
     // MPC is initialized here!
     MPC mpc;
 
-    h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+    h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER != 0u> ws, char *data, size_t length,
                        uWS::OpCode opCode) {
         // "42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
@@ -82,7 +78,7 @@ int main() {
         cout << sdata << endl;
         if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
             string s = hasData(sdata);
-            if (s != "") {
+            if (!s.empty()) {
                 auto j = json::parse(s);
                 string event = j[0].get<string>();
                 if (event == "telemetry") {
@@ -192,11 +188,11 @@ int main() {
         }
     });
 
-    h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+    h.onConnection([&h](uWS::WebSocket<uWS::SERVER != 0u> ws, uWS::HttpRequest req) {
         std::cout << "Connected!!!" << std::endl;
     });
 
-    h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code,
+    h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER != 0u> ws, int code,
                            char *message, size_t length) {
         ws.close();
         std::cout << "Disconnected" << std::endl;
