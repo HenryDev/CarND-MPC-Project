@@ -69,8 +69,7 @@ int main() {
     // MPC is initialized here!
     MPC mpc;
 
-    h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER != 0u> ws, char *data, size_t length,
-                       uWS::OpCode opCode) {
+    h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER != 0u> ws, char *data, size_t length, uWS::OpCode opCode) {
         // "42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
@@ -89,24 +88,27 @@ int main() {
                     double py = j[1]["y"];
                     double psi = j[1]["psi"];
                     double velocity = j[1]["speed"];
+                    double steering_angle = j[1]["steering_angle"];
+                    double throttle = j[1]["throttle"];
 
                     /*
                     * Calculate steering angle and throttle using MPC.
                     * Both are in between [-1, 1].
                     */
+                    double cos_psi = cos(-psi);
+                    double sin_psi = sin(-psi);
                     for (int i = 0; i < ptsx.size(); i++) {
                         double shift_x = ptsx[i] - px;
                         double shift_y = ptsy[i] - py;
-                        ptsx[i] = shift_x * cos(-psi) - shift_y * sin(-psi);
-                        ptsy[i] = shift_x * sin(-psi) + shift_y * cos(-psi);
+                        ptsx[i] = shift_x * cos_psi - shift_y * sin_psi;
+                        ptsy[i] = shift_x * sin_psi + shift_y * cos_psi;
                     }
                     Eigen::Map<Eigen::VectorXd> ptsx_transform(&ptsx[0], 6);
                     Eigen::Map<Eigen::VectorXd> ptsy_transform(&ptsy[0], 6);
                     const Eigen::VectorXd &coefficients = polyfit(ptsx_transform, ptsy_transform, 3);
                     double cross_track_error = polyeval(coefficients, 0);
                     double error_psi = -atan(coefficients[1]);
-                    double steering_angle = j[1]["steering_angle"];
-                    double throttle = j[1]["throttle"];
+
                     Eigen::VectorXd state(6);
                     state << 0, 0, 0, velocity, cross_track_error, error_psi;
 
