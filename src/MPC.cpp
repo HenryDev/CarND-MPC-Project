@@ -191,9 +191,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     // object that computes objective and constraints
     FG_eval fg_eval(std::move(coeffs));
 
-    //
-    // NOTE: You don't have to worry about these options
-    //
     // options for IPOPT solver
     std::string options;
     // Uncomment this if you'd like more print information
