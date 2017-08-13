@@ -8,7 +8,7 @@ using namespace std;
 struct Results {
     vector<double> xs;
     vector<double> ys;
-    vector<double> gaps;
+    vector<double> delta;
     vector<double> accelerations;
 };
 
