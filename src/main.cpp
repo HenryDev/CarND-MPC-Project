@@ -6,13 +6,9 @@
 #include "MPC.h"
 #include "json.hpp"
 
-// for convenience
 using json = nlohmann::json;
 
-// For converting back and forth between radians and degrees.
-constexpr double pi() { return M_PI; }
-
-double deg2rad(double x) { return x * pi() / 180; }
+double deg2rad(double x) { return x * M_PI / 180; }
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
